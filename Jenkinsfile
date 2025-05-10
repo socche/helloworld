@@ -25,6 +25,8 @@ pipeline {
                     export PYTHONPATH=$WORKSPACE
                     pytest --junitxml=result-unit.xml test/unit
                 '''
+                echo 'Publicando resultados unitarios'
+                junit 'result-unit.xml'
             }
         }
 
@@ -51,8 +53,9 @@ pipeline {
                 sh '''
                     mkdir -p mocks/mappings
                     cp test/wiremock/mappings/*.json mocks/mappings/
+                    python3 -m venv venv
                     . venv/bin/activate
-                    pip install flask
+                    pip install pytest flask
                     export FLASK_APP=app/api.py
                     export FLASK_ENV=development
                     venv/bin/flask run --host=127.0.0.1 --port=5000 &
@@ -61,15 +64,9 @@ pipeline {
                     export PYTHONPATH=$WORKSPACE
                     venv/bin/pytest --junitxml=result-rest.xml test/rest
                 '''
+                echo 'Publicando resultados de integración'
+                junit 'result-rest.xml'
             }
-        }
-    }
-
-    post {
-        always {
-            echo 'Publicando resultados'
-            junit 'result-unit.xml'
-            junit 'result-rest.xml'
         }
     }
 }
