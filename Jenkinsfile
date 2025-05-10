@@ -20,13 +20,13 @@ pipeline {
                 sh 'whoami && hostname && echo $WORKSPACE'
                 unstash 'codigo'
                 sh '''
-                    (
+                    bash -c "
                         python3 -m venv venv
-                        . venv/bin/activate
+                        source venv/bin/activate
                         pip install pytest flask
                         export PYTHONPATH=$WORKSPACE
                         pytest --junitxml=result-unit.xml test/unit
-                    )
+                    "
                 '''
                 echo 'Publicando resultados unitarios'
                 junit 'result-unit.xml'
@@ -56,20 +56,20 @@ pipeline {
                 sh 'whoami && hostname && echo $WORKSPACE'
                 unstash 'codigo_con_wiremock'
                 sh '''
-                    (
+                    bash -c "
                         mkdir -p mocks/mappings
                         cp test/wiremock/mappings/*.json mocks/mappings/
                         python3 -m venv venv
-                        . venv/bin/activate
+                        source venv/bin/activate
                         pip install pytest flask
                         export FLASK_APP=app/api.py
                         export FLASK_ENV=development
                         flask run --host=127.0.0.1 --port=5000 &
-                        java -jar mocks/wiremock.jar --port=9090 --root-dir mocks &
+                        java -jar mocks/wiremock.jar --port 9090 --root-dir mocks &
                         sleep 8
                         export PYTHONPATH=$WORKSPACE
                         pytest --junitxml=result-rest.xml test/rest
-                    )
+                    "
                 '''
                 echo 'Publicando resultados de integración'
                 junit 'result-rest.xml'
