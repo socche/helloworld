@@ -51,6 +51,8 @@ pipeline {
                 sh '''
                     mkdir -p mocks/mappings
                     cp test/wiremock/mappings/*.json mocks/mappings/
+                    . venv/bin/activate
+                    pip install flask
                     export FLASK_APP=app/api.py
                     export FLASK_ENV=development
                     venv/bin/flask run --host=127.0.0.1 --port=5000 &
