@@ -68,8 +68,9 @@ pipeline {
                 junit 'result-rest.xml'
             }
         }
-        
-        post {
+    }
+
+    post {
         always {
             echo 'Limpiando workspaces de los agentes usados'
             cleanWs()
