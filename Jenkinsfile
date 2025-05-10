@@ -3,9 +3,9 @@ pipeline {
 
     stages {
         stage('Get Code') {
-            agent { label 'master' }
+            agent { label 'raspberry-agent' }
             steps {
-                echo 'Clonando repositorio en el nodo principal'
+                echo 'Clonando repositorio en la Raspberry Pi'
                 sh 'whoami && hostname && echo $WORKSPACE'
                 git url: 'https://github.com/socche/helloworld.git'
                 stash name: 'codigo', includes: '**/*'
@@ -15,7 +15,7 @@ pipeline {
         stage('Unit Tests') {
             agent { label 'raspberry-agent' }
             steps {
-                echo 'Desempaquetando código en la Raspberry Pi'
+                echo 'Ejecutando tests unitarios en Raspberry Pi'
                 sh 'whoami && hostname && echo $WORKSPACE'
                 unstash 'codigo'
                 sh '''
@@ -45,7 +45,7 @@ pipeline {
         stage('Integration Tests') {
             agent { label 'wsl-agent' }
             steps {
-                echo 'Ejecutando integración en WSL'
+                echo 'Ejecutando tests de integración en WSL'
                 sh 'whoami && hostname && echo $WORKSPACE'
                 unstash 'codigo_con_wiremock'
                 sh '''
