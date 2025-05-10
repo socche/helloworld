@@ -9,6 +9,7 @@ pipeline {
                 sh 'whoami && hostname && echo $WORKSPACE'
                 git url: 'https://github.com/socche/helloworld.git'
                 stash name: 'codigo', includes: '**/*'
+                cleanWs()
             }
         }
 
@@ -27,6 +28,7 @@ pipeline {
                 '''
                 echo 'Publicando resultados unitarios'
                 junit 'result-unit.xml'
+                cleanWs()
             }
         }
 
@@ -41,6 +43,7 @@ pipeline {
                     wget -O mocks/wiremock.jar https://repo1.maven.org/maven2/com/github/tomakehurst/wiremock-standalone/2.9.0/wiremock-standalone-2.9.0.jar
                 '''
                 stash name: 'codigo_con_wiremock', includes: '**/*'
+                cleanWs()
             }
         }
 
@@ -66,14 +69,8 @@ pipeline {
                 '''
                 echo 'Publicando resultados de integración'
                 junit 'result-rest.xml'
+                cleanWs()
             }
-        }
-    }
-
-    post {
-        always {
-            echo 'Limpiando workspaces de los agentes usados'
-            cleanWs()
         }
     }
 }
