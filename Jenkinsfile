@@ -21,8 +21,10 @@ pipeline {
                 unstash 'codigo'
                 sh '''
                     bash -c "
+                        rm -rf venv
                         python3 -m venv venv
                         source venv/bin/activate
+                        pip install --upgrade pip
                         pip install pytest flask
                         export PYTHONPATH=$WORKSPACE
                         pytest --junitxml=result-unit.xml test/unit
@@ -57,11 +59,13 @@ pipeline {
                 unstash 'codigo_con_wiremock'
                 sh '''
                     bash -c "
-                        mkdir -p mocks/mappings
-                        cp test/wiremock/mappings/*.json mocks/mappings/
+                        rm -rf venv
                         python3 -m venv venv
                         source venv/bin/activate
+                        pip install --upgrade pip
                         pip install pytest flask
+                        mkdir -p mocks/mappings
+                        cp test/wiremock/mappings/*.json mocks/mappings/
                         export FLASK_APP=app/api.py
                         export FLASK_ENV=development
                         flask run --host=127.0.0.1 --port=5000 &
