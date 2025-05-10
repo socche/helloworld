@@ -3,9 +3,9 @@ pipeline {
 
     stages {
         stage('Get Code') {
-            agent { label 'principal' }
+            agent { label 'master' }
             steps {
-                echo 'Clonando repositorio en el principal'
+                echo 'Clonando repositorio en el nodo principal'
                 sh 'whoami && hostname && echo $WORKSPACE'
                 git url: 'https://github.com/socche/helloworld.git'
                 stash name: 'codigo', includes: '**/*'
