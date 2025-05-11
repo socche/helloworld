@@ -13,6 +13,12 @@ pipeline {
             }
         }
 
+        stage('Debug') {
+            steps {
+                echo '🔍 Esto viene del Jenkinsfile de DEVELOP'
+            }
+        }
+
         stage('Unit Tests') {
             agent { label 'raspberry-agent' }
             steps {
