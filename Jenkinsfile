@@ -7,15 +7,8 @@ pipeline {
             steps {
                 echo 'Clonando repositorio en la Raspberry Pi'
                 sh 'whoami && hostname && echo $WORKSPACE'
-                git url: 'https://github.com/socche/helloworld.git'
                 stash name: 'codigo', includes: '**/*'
                 cleanWs()
-            }
-        }
-
-        stage('Debug') {
-            steps {
-                echo '🔍 Esto viene del Jenkinsfile de DEVELOP'
             }
         }
 
