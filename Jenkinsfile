@@ -75,7 +75,6 @@ pipeline {
                         echo 'WireMock disponible, continuamos con los tests'
                         export PYTHONPATH=$WORKSPACE
                         pytest --junitxml=result-rest.xml test/rest
-                        wait
                     "
                 '''
                 echo 'Publicando resultados de integración'
