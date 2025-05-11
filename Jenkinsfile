@@ -70,6 +70,11 @@ pipeline {
                         export FLASK_ENV=development
                         flask run --host=127.0.0.1 --port=5000 &
                         java -jar mocks/wiremock.jar --port 9090 --root-dir mocks &
+                        echo "Esperando a que WireMock exponga el puerto 9090..."
+                        until nc -z localhost 9090; do
+                        sleep 1
+                        done
+                        echo "WireMock disponible, continuamos con los tests"
                         sleep 0.5
                         export PYTHONPATH=$WORKSPACE
                         pytest --junitxml=result-rest.xml test/rest
