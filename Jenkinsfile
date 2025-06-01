@@ -2,62 +2,59 @@ pipeline {
     agent none
 
     environment {
-        PYTHONUNBUFFERED = '1'
-        PYTHONPATH = "${WORKSPACE}"
+        JAR_WIREMOCK = '/home/jenkins/tools/wiremock.jar'
     }
 
     stages {
-        stage('Preparar entorno') {
-            agent { label 'master' }
-
+        stage('Get Code') {
+            agent { label 'raspberry-agent' }
             steps {
-                echo 'Descargando código y preparando entorno...'
-                deleteDir()
-                checkout scm
-                stash name: 'source_code', includes: '**'
+                echo 'Clonando repositorio en la Raspberry Pi'
+                sh 'whoami && hostname && echo $WORKSPACE'
+                git url: 'https://github.com/socche/helloworld.git'
+                stash name: 'codigo', includes: '**/*'
+                cleanWs()
             }
         }
 
-        stage('Tests paralelos') {
+        stage('Tests') {
             parallel {
                 stage('Unit Tests') {
-                    agent { label 'raspi' }
-
+                    agent { label 'raspberry-agent' }
                     steps {
-                        unstash 'source_code'
+                        echo 'Ejecutando tests unitarios en Raspberry Pi'
+                        sh 'whoami && hostname && echo $WORKSPACE'
+                        unstash 'codigo'
 
                         sh '''
-                            echo "== Ejecutando tests unitarios en Raspberry Pi =="
                             rm -rf venv
                             python3 -m venv venv
-                            . venv/bin/activate
+                            source venv/bin/activate
                             pip install --upgrade pip
                             pip install pytest flask
 
                             export PYTHONPATH=$WORKSPACE
                             pytest --junitxml=result-unit.xml test/unit
                         '''
-                    }
 
-                    post {
-                        always {
-                            echo 'Publicando resultados unitarios'
-                            junit 'result-unit.xml'
-                        }
+                        echo 'Publicando resultados unitarios'
+                        junit 'result-unit.xml'
+                        cleanWs()
                     }
                 }
 
                 stage('Integration Tests') {
-                    agent { label 'wsl' }
-
+                    agent { label 'wsl-agent' }
                     steps {
-                        unstash 'source_code'
+                        echo 'Ejecutando tests de integración en WSL'
+                        sh 'whoami && hostname && echo $WORKSPACE'
+                        unstash 'codigo'
 
                         sh '''
-                            echo "== Ejecutando tests de integración en WSL =="
+                            echo "== Preparando entorno de pruebas de integración =="
                             rm -rf venv
                             python3 -m venv venv
-                            . venv/bin/activate
+                            source venv/bin/activate
                             pip install --upgrade pip
                             pip install pytest flask
 
@@ -69,40 +66,31 @@ pipeline {
                             flask run --host=127.0.0.1 --port=5000 &
 
                             echo "== Lanzando WireMock =="
-                            nohup java -jar tools/wiremock.jar --port 9090 --root-dir mocks > wiremock.log 2>&1 &
+                            nohup java -jar $JAR_WIREMOCK --port 9090 --root-dir mocks > wiremock.log 2>&1 &
 
-                            echo "== Esperando que WireMock exponga el puerto 9090 =="
+                            echo "== Esperando a que WireMock exponga el puerto 9090... =="
                             for i in {1..30}; do
                                 nc -z localhost 9090 && break
                                 sleep 1
                             done
 
                             if ! nc -z localhost 9090; then
-                                echo "ERROR: WireMock no está disponible en el puerto 9090 tras 30 segundos"
+                                echo "ERROR: WireMock no está disponible en el puerto 9090 tras 30s"
                                 tail -n 20 wiremock.log || true
                                 exit 1
                             fi
 
-                            echo "== WireMock disponible, lanzando tests de integración =="
+                            echo "== WireMock disponible, continuamos con los tests =="
                             export PYTHONPATH=$WORKSPACE
                             pytest --junitxml=result-rest.xml test/rest
                         '''
-                    }
 
-                    post {
-                        always {
-                            echo 'Publicando resultados de integración'
-                            junit 'result-rest.xml'
-                        }
+                        echo 'Publicando resultados de integración'
+                        junit 'result-rest.xml'
+                        cleanWs()
                     }
                 }
             }
-        }
-    }
-
-    post {
-        always {
-            cleanWs()
         }
     }
 }
