@@ -1,10 +1,6 @@
 pipeline {
     agent none
 
-    environment {
-        JAR_WIREMOCK = '/home/jenkins/tools/wiremock.jar'
-    }
-
     stages {
         stage('Get Code') {
             agent { label 'raspberry-agent' }
@@ -28,7 +24,7 @@ pipeline {
                         sh '''
                             rm -rf venv
                             python3 -m venv venv
-                            source venv/bin/activate
+                            . venv/bin/activate
                             pip install --upgrade pip
                             pip install pytest flask
                             export PYTHONPATH=$WORKSPACE
@@ -49,7 +45,7 @@ pipeline {
                         sh '''
                             rm -rf venv
                             python3 -m venv venv
-                            source venv/bin/activate
+                            . venv/bin/activate
                             pip install --upgrade pip
                             pip install pytest flask
                             mkdir -p mocks/mappings
@@ -57,7 +53,7 @@ pipeline {
                             export FLASK_APP=app/api.py
                             export FLASK_ENV=development
                             flask run --host=127.0.0.1 --port=5000 &
-                            java -jar $JAR_WIREMOCK --port 9090 --root-dir mocks &
+                            java -jar tools/wiremock.jar --port 9090 --root-dir mocks &
                             echo 'Esperando a que WireMock exponga el puerto 9090...'
                             until nc -z localhost 9090; do sleep 1; done
                             echo 'WireMock disponible, continuamos con los tests'
