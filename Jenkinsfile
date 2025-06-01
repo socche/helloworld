@@ -14,7 +14,6 @@ pipeline {
                 echo 'Descargando código y preparando entorno...'
                 deleteDir()
                 checkout scm
-
                 stash name: 'source_code', includes: '**'
             }
         }
@@ -72,14 +71,19 @@ pipeline {
                             echo "== Lanzando WireMock =="
                             nohup java -jar tools/wiremock.jar --port 9090 --root-dir mocks > wiremock.log 2>&1 &
 
-                            sleep 3
-                            echo "=== Últimas líneas del log de WireMock ==="
-                            tail -n 20 wiremock.log || true
+                            echo "== Esperando que WireMock exponga el puerto 9090 =="
+                            for i in {1..30}; do
+                                nc -z localhost 9090 && break
+                                sleep 1
+                            done
 
-                            echo "== Esperando a que WireMock exponga el puerto 9090... =="
-                            until nc -z localhost 9090; do sleep 1; done
-                            echo "== WireMock disponible, continuamos con los tests =="
+                            if ! nc -z localhost 9090; then
+                                echo "ERROR: WireMock no está disponible en el puerto 9090 tras 30 segundos"
+                                tail -n 20 wiremock.log || true
+                                exit 1
+                            fi
 
+                            echo "== WireMock disponible, lanzando tests de integración =="
                             export PYTHONPATH=$WORKSPACE
                             pytest --junitxml=result-rest.xml test/rest
                         '''
