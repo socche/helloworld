@@ -14,11 +14,6 @@ pipeline {
                 git url: 'https://github.com/socche/helloworld.git'
                 stash name: 'codigo', includes: '**/*'
             }
-            post {
-                always {
-                    cleanWs()
-                }
-            }
         }
 
         stage('Tests') {
@@ -42,12 +37,8 @@ pipeline {
                                 pytest --junitxml=result-unit.xml test/unit
                             '''
                         }
-                    }
-                    post {
-                        always {
-                            junit 'result-unit.xml'
-                            cleanWs()
-                        }
+
+                        stash name: 'unit-results', includes: 'result-unit.xml'
                     }
                 }
 
@@ -94,12 +85,8 @@ pipeline {
                                 pytest --junitxml=result-rest.xml test/rest
                             '''
                         }
-                    }
-                    post {
-                        always {
-                            junit 'result-rest.xml'
-                            cleanWs()
-                        }
+
+                        stash name: 'rest-results', includes: 'result-rest.xml'
                     }
                 }
             }
@@ -109,7 +96,14 @@ pipeline {
             agent { label 'raspberry-agent' }
             steps {
                 echo 'Mostrando resultados finales de los tests'
+                unstash 'unit-results'
+                unstash 'rest-results'
                 junit 'result-*.xml'
+            }
+            post {
+                always {
+                    cleanWs()
+                }
             }
         }
     }
