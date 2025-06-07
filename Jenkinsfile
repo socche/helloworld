@@ -220,23 +220,10 @@ pipeline {
             post {
                 always {
                     perfReport sourceDataFiles: 'test/jmeter/results.jtl'
-                }
-            }
-        }
-
-        stage('Results') {
-            agent { label 'raspberry-agent' }
-            steps {
-                echo 'Mostrando resultados finales de los tests'
-                unstash 'unit-results'
-                // unstash 'rest-results' // Comentado porque se ha deshabilitado Integration Tests
-                junit 'result-*.xml'
-            }
-            post {
-                always {
                     cleanWs()
                 }
             }
         }
     }
 }
+
