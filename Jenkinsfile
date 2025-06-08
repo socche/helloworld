@@ -109,7 +109,7 @@ pipeline {
                         pip install pytest coverage
 
                         export PYTHONPATH=$WORKSPACE
-
+                        coverage erase
                         coverage run --branch --source=app --omit=app/__init__.py,app/api.py -m pytest test/unit
                         coverage xml
                     '''
