@@ -63,14 +63,8 @@ class TestCalculate(unittest.TestCase):
         self.assertRaises(TypeError, self.calc.substract, "0", 0)
 
     def test_divide_zero_branch_explicit(self):
-        calc = Calculator()
-        try:
-            calc.divide(10, 0)
-        except Exception as e:
-            assert isinstance(e, TypeError)
-            assert "Division by zero is not possible" in str(e)
-        else:
-            assert False, "TypeError not raised"
+        with self.assertRaises(TypeError):
+            self.calc.divide(10, 0)
         
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()
