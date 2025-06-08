@@ -1,4 +1,3 @@
-
 pipeline {
     agent none
 
@@ -44,8 +43,6 @@ pipeline {
                     }
                 }
 
-                // stage deshabilitado temporalmente por recomendación del profesor
-                /*
                 stage('Integration Tests') {
                     agent { label 'wsl-agent' }
                     steps {
@@ -93,7 +90,6 @@ pipeline {
                         stash name: 'rest-results', includes: 'result-rest.xml'
                     }
                 }
-                */
             }
         }
 
@@ -220,10 +216,23 @@ pipeline {
             post {
                 always {
                     perfReport sourceDataFiles: 'test/jmeter/results.jtl'
+                }
+            }
+        }
+
+        stage('Results') {
+            agent { label 'raspberry-agent' }
+            steps {
+                echo 'Mostrando resultados finales de los tests'
+                unstash 'unit-results'
+                unstash 'rest-results'
+                junit 'result-*.xml'
+            }
+            post {
+                always {
                     cleanWs()
                 }
             }
         }
     }
 }
-
