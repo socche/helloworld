@@ -65,7 +65,7 @@ class TestCalculate(unittest.TestCase):
     def test_divide_zero_branch(self):
         calc = Calculator()
         try:
-            calc.divide(5, 0)
+            calc.divide(10, 0)
         except TypeError as e:
             assert str(e) == "Division by zero is not possible"
 
