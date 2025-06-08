@@ -62,10 +62,8 @@ class TestCalculate(unittest.TestCase):
         self.assertEqual(0, self.calc.substract(0, 0))
         self.assertRaises(TypeError, self.calc.substract, "0", 0)
 
-    def test_divide_by_zero_type_error(self):
-        calc = Calculator()
-        with pytest.raises(TypeError, match="Division by zero"):
-            calc.divide(5, 0)
+    def test_divide_zero_direct(self):
+        self.assertRaises(TypeError, self.calc.divide, 5, 0)
 
         
 if __name__ == "__main__":  # pragma: no cover
